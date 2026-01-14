@@ -97,6 +97,7 @@ const authStore = useAuthStore()
 .dashboard {
   max-width: 900px;
   margin: 0 auto;
+  padding: 2rem;
 }
 
 .welcome-banner {
@@ -145,16 +146,16 @@ const authStore = useAuthStore()
   align-items: center;
   gap: 1rem;
   padding: 1.25rem;
-  background: white;
+  background: var(--bg-secondary);
   border-radius: 12px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border-color);
   text-decoration: none;
   transition: all 0.2s;
 }
 
 .action-card:hover {
-  border-color: transparent;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+  border-color: var(--border-hover);
+  box-shadow: 0 8px 24px var(--shadow-lg);
   transform: translateY(-2px);
 }
 
@@ -198,21 +199,21 @@ const authStore = useAuthStore()
 }
 
 .action-content h3 {
-  color: #0f172a;
+  color: var(--text-primary);
   font-size: 1rem;
   font-weight: 600;
   margin-bottom: 0.25rem;
 }
 
 .action-content p {
-  color: #64748b;
+  color: var(--text-secondary);
   font-size: 0.85rem;
 }
 
 .action-arrow {
   width: 20px;
   height: 20px;
-  color: #cbd5e1;
+  color: var(--text-muted);
   transition: all 0.2s;
   flex-shrink: 0;
 }

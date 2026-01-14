@@ -55,7 +55,7 @@
     <div class="filters-bar">
       <div class="filter-tabs">
         <button :class="['tab', { active: statusFilter === '' }]" @click="setFilter('')">
-          All <span class="count">{{ trucks.length }}</span>
+          All <span class="count">{{ totalTrucks }}</span>
         </button>
         <button :class="['tab', { active: statusFilter === 'READY' }]" @click="setFilter('READY')">
           <span class="dot ready"></span> Ready <span class="count">{{ countByDisplayStatus('READY') }}</span>
@@ -136,7 +136,16 @@
         <tbody>
           <tr v-for="truck in sortedTrucks" :key="truck.id" :class="['table-row', { inactive: truck.is_inactive }]">
             <td class="truck-number">{{ truck.truck_number }}</td>
-            <td class="location-cell">{{ formatLocation(truck) }}</td>
+            <td class="location-cell">
+              <button
+                v-if="formatLocation(truck) !== '-'"
+                @click="openLocationModal(truck)"
+                class="location-btn"
+              >
+                {{ formatLocation(truck) }}
+              </button>
+              <span v-else>-</span>
+            </td>
 
             <!-- Status Badge -->
             <td>
@@ -265,6 +274,52 @@
       </div>
     </div>
 
+    <!-- Location Modal -->
+    <div v-if="showLocationModal" class="modal-overlay" @click.self="closeLocationModal">
+      <div class="location-modal">
+        <div class="modal-header">
+          <div>
+            <h3>Location Details</h3>
+            <p>Truck #{{ selectedLocation.truckNumber }}</p>
+          </div>
+          <button @click="closeLocationModal" class="modal-close">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 6L6 18M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+        <div class="location-info">
+          <div class="address-display">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
+              <circle cx="12" cy="10" r="3"/>
+            </svg>
+            <div class="address-text">
+              <span v-if="selectedLocation.location" class="address-main">
+                {{ selectedLocation.location }}
+              </span>
+              <span v-else class="address-main empty">No location available</span>
+            </div>
+          </div>
+          <button
+            v-if="selectedLocation.location"
+            @click="copyFullLocation"
+            class="copy-location-btn"
+            :class="{ copied: locationCopied }"
+          >
+            <svg v-if="locationCopied" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 6L9 17l-5-5"/>
+            </svg>
+            <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+              <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+            </svg>
+            {{ locationCopied ? 'Copied!' : 'Copy Address' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Dispatcher Contact Modal -->
     <div v-if="showDispatcherModal" class="modal-overlay" @click.self="closeDispatcherModal">
       <div class="dispatcher-modal">
@@ -342,6 +397,11 @@ const ratingSuccess = ref('')
 const showDispatcherModal = ref(false)
 const selectedDispatcher = ref({ name: '', phone: '', email: '' })
 
+// Location modal state
+const showLocationModal = ref(false)
+const selectedLocation = ref({ truckNumber: '', city: '', state: '' })
+const locationCopied = ref(false)
+
 const isRatingValid = computed(() => {
   return criteria.value.length > 0 && criteria.value.every(c => ratings[c.id] > 0)
 })
@@ -387,7 +447,14 @@ const availableStatuses = computed(() => {
 
 const filteredTrucks = computed(() => {
   return trucks.value.filter(truck => {
-    const matchesStatus = !statusFilter.value || truck.display_status === statusFilter.value
+    let matchesStatus = true
+    if (statusFilter.value) {
+      if (statusFilter.value === 'N/A') {
+        matchesStatus = !truck.display_status || truck.display_status === 'N/A'
+      } else {
+        matchesStatus = truck.display_status === statusFilter.value
+      }
+    }
     const matchesState = !stateFilter.value || truck.state === stateFilter.value
     const matchesSearch = !searchQuery.value ||
       truck.truck_number.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
@@ -435,11 +502,14 @@ function getSortIcon(column) {
 }
 
 function countByStatus(status) {
-  return trucks.value.filter(t => t.status === status).length
+  return allTrucks.value.filter(t => !t.is_inactive && t.status === status).length
 }
 
 function countByDisplayStatus(status) {
-  return trucks.value.filter(t => t.display_status === status).length
+  if (status === 'N/A') {
+    return allTrucks.value.filter(t => !t.is_inactive && (!t.display_status || t.display_status === 'N/A')).length
+  }
+  return allTrucks.value.filter(t => !t.is_inactive && t.display_status === status).length
 }
 
 function formatLocation(truck) {
@@ -447,6 +517,35 @@ function formatLocation(truck) {
   if (truck.city) parts.push(truck.city)
   if (truck.state) parts.push(truck.state)
   return parts.length > 0 ? parts.join(', ') : '-'
+}
+
+function openLocationModal(truck) {
+  selectedLocation.value = {
+    truckNumber: truck.truck_number,
+    location: truck.location || '',
+    city: truck.city || '',
+    state: truck.state || ''
+  }
+  locationCopied.value = false
+  showLocationModal.value = true
+}
+
+function closeLocationModal() {
+  showLocationModal.value = false
+}
+
+async function copyFullLocation() {
+  const location = selectedLocation.value.location || ''
+
+  try {
+    await navigator.clipboard.writeText(location)
+    locationCopied.value = true
+    setTimeout(() => {
+      locationCopied.value = false
+    }, 2000)
+  } catch (err) {
+    console.error('Failed to copy:', err)
+  }
 }
 
 function openDispatcherModal(truck) {
@@ -466,11 +565,10 @@ async function loadTrucks() {
   loading.value = true
   try {
     const params = { show_inactive: showInactive.value }
-    if (statusFilter.value) params.status_filter = statusFilter.value
     const response = await api.getTrucks(params)
     trucks.value = response.data
 
-    // Also load all trucks for stats
+    // Also load all trucks for stats (including inactive)
     const allResponse = await api.getTrucks({ show_inactive: true })
     allTrucks.value = allResponse.data
 
@@ -494,7 +592,6 @@ async function loadLastSync() {
 
 function setFilter(status) {
   statusFilter.value = status
-  loadTrucks()
 }
 
 async function syncFromPeaka() {
@@ -615,14 +712,15 @@ onMounted(loadTrucks)
 
 <style scoped>
 /* ================================================
-   REFINED DARK THEME - PROFESSIONAL FLEET DASHBOARD
+   THEMED FLEET DASHBOARD - SUPPORTS LIGHT/DARK
    ================================================ */
 
 .trucks-page {
-  background: #1e293b;
+  background: var(--bg-primary);
   min-height: calc(100vh - 64px);
   padding: 2rem;
-  color: #e2e8f0;
+  color: var(--text-primary);
+  transition: all 0.3s ease;
 }
 
 /* Stats Row */
@@ -637,13 +735,14 @@ onMounted(loadTrucks)
 }
 
 .stat-card {
-  background: #334155;
+  background: var(--bg-secondary);
   border-radius: 16px;
   padding: 1.5rem;
-  border: 1px solid #475569;
+  border: 1px solid var(--border-color);
   position: relative;
   overflow: hidden;
   transition: all 0.3s ease;
+  box-shadow: 0 1px 3px var(--shadow);
 }
 
 .stat-card::before {
@@ -658,8 +757,8 @@ onMounted(loadTrucks)
 
 .stat-card:hover {
   transform: translateY(-2px);
-  border-color: #64748b;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  border-color: var(--border-hover);
+  box-shadow: 0 8px 24px var(--shadow-lg);
 }
 
 .stat-value {
@@ -672,7 +771,7 @@ onMounted(loadTrucks)
 .stat-label {
   font-size: 0.8rem;
   font-weight: 500;
-  color: #94a3b8;
+  color: var(--text-secondary);
   margin-top: 0.5rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -732,19 +831,19 @@ onMounted(loadTrucks)
 .page-header h1 {
   font-size: 1.875rem;
   font-weight: 700;
-  color: #f1f5f9;
+  color: var(--text-primary);
   margin-bottom: 0.375rem;
   letter-spacing: -0.025em;
 }
 
 .subtitle {
-  color: #94a3b8;
+  color: var(--text-secondary);
   font-size: 0.9rem;
   font-weight: 400;
 }
 
 .last-sync {
-  color: #64748b;
+  color: var(--text-muted);
   font-size: 0.8rem;
   font-weight: 400;
   margin-top: 0.25rem;
@@ -793,7 +892,7 @@ onMounted(loadTrucks)
   align-items: center;
   gap: 0.625rem;
   font-size: 0.875rem;
-  color: #94a3b8;
+  color: var(--text-secondary);
   cursor: pointer;
   padding: 0.5rem 0.75rem;
   border-radius: 8px;
@@ -801,8 +900,8 @@ onMounted(loadTrucks)
 }
 
 .toggle-inactive:hover {
-  background: #334155;
-  color: #f1f5f9;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
 }
 
 .toggle-inactive input {
@@ -819,19 +918,20 @@ onMounted(loadTrucks)
   margin-bottom: 1.75rem;
   gap: 1rem;
   flex-wrap: wrap;
-  background: #334155;
+  background: var(--bg-secondary);
   padding: 1rem 1.25rem;
   border-radius: 14px;
-  border: 1px solid #475569;
+  border: 1px solid var(--border-color);
   max-width: 1400px;
   margin-left: auto;
   margin-right: auto;
+  box-shadow: 0 1px 3px var(--shadow);
 }
 
 .filter-tabs {
   display: flex;
   gap: 0.375rem;
-  background: #1e293b;
+  background: var(--bg-tertiary);
   padding: 0.375rem;
   border-radius: 12px;
 }
@@ -846,14 +946,14 @@ onMounted(loadTrucks)
   border-radius: 8px;
   font-size: 0.8rem;
   font-weight: 500;
-  color: #94a3b8;
+  color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .tab:hover {
-  color: #f1f5f9;
-  background: rgba(59, 130, 246, 0.15);
+  color: var(--text-primary);
+  background: var(--bg-secondary);
 }
 
 .tab.active {
@@ -875,7 +975,7 @@ onMounted(loadTrucks)
 .dot.na { background: #6b7280; }
 
 .tab .count {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.08);
   padding: 0.125rem 0.5rem;
   border-radius: 6px;
   font-size: 0.7rem;
@@ -895,18 +995,18 @@ onMounted(loadTrucks)
 .state-select,
 .status-select {
   padding: 0.5rem 0.75rem;
-  border: 1px solid #475569;
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   font-size: 0.8rem;
-  background: #1e293b;
-  color: #e2e8f0;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .state-select:hover,
 .status-select:hover {
-  border-color: #64748b;
+  border-color: var(--border-hover);
 }
 
 .state-select:focus,
@@ -927,23 +1027,23 @@ onMounted(loadTrucks)
   transform: translateY(-50%);
   width: 16px;
   height: 16px;
-  color: #64748b;
+  color: var(--text-secondary);
   transition: color 0.2s;
 }
 
 .search-box input {
   padding: 0.625rem 1rem 0.625rem 2.75rem;
-  border: 1px solid #475569;
+  border: 1px solid var(--border-color);
   border-radius: 10px;
   font-size: 0.875rem;
   width: 220px;
-  background: #1e293b;
-  color: #e2e8f0;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
   transition: all 0.2s;
 }
 
 .search-box input:hover {
-  border-color: #64748b;
+  border-color: var(--border-hover);
 }
 
 .search-box input:focus {
@@ -957,7 +1057,7 @@ onMounted(loadTrucks)
 }
 
 .search-box input::placeholder {
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 /* Loading & Empty States */
@@ -967,10 +1067,10 @@ onMounted(loadTrucks)
   align-items: center;
   justify-content: center;
   padding: 5rem 2rem;
-  color: #94a3b8;
-  background: #334155;
+  color: var(--text-secondary);
+  background: var(--bg-secondary);
   border-radius: 16px;
-  border: 1px solid #475569;
+  border: 1px solid var(--border-color);
   max-width: 1400px;
   margin-left: auto;
   margin-right: auto;
@@ -979,7 +1079,7 @@ onMounted(loadTrucks)
 .spinner {
   width: 40px;
   height: 40px;
-  border: 3px solid #475569;
+  border: 3px solid var(--border-color);
   border-top-color: #3b82f6;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
@@ -993,29 +1093,29 @@ onMounted(loadTrucks)
 .empty-state svg {
   width: 72px;
   height: 72px;
-  color: #64748b;
+  color: var(--text-muted);
   margin-bottom: 1.25rem;
 }
 
 .empty-state h3 {
-  color: #f1f5f9;
+  color: var(--text-primary);
   font-size: 1.125rem;
   font-weight: 600;
   margin-bottom: 0.375rem;
 }
 
 .empty-state p {
-  color: #64748b;
+  color: var(--text-secondary);
 }
 
 /* Table Container */
 .table-container {
-  background: #334155;
+  background: var(--bg-secondary);
   border-radius: 16px;
   overflow: hidden;
-  border: 1px solid #475569;
+  border: 1px solid var(--border-color);
   overflow-x: auto;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 24px var(--shadow);
   max-width: 1400px;
   margin-left: auto;
   margin-right: auto;
@@ -1028,15 +1128,15 @@ onMounted(loadTrucks)
 }
 
 .fleet-table th {
-  background: #1e293b;
+  background: var(--bg-tertiary);
   padding: 0.75rem 0.75rem;
   text-align: left;
   font-weight: 600;
   font-size: 0.65rem;
-  color: #94a3b8;
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  border-bottom: 1px solid #475569;
+  border-bottom: 1px solid var(--border-color);
   white-space: nowrap;
 }
 
@@ -1058,9 +1158,9 @@ onMounted(loadTrucks)
 
 .fleet-table td {
   padding: 0.75rem 0.75rem;
-  border-bottom: 1px solid #475569;
+  border-bottom: 1px solid var(--border-color);
   font-size: 0.8rem;
-  color: #e2e8f0;
+  color: var(--text-primary);
 }
 
 .table-row {
@@ -1068,11 +1168,7 @@ onMounted(loadTrucks)
 }
 
 .table-row:hover {
-  background: rgba(59, 130, 246, 0.1);
-}
-
-.table-row:hover td {
-  color: #f1f5f9;
+  background: rgba(59, 130, 246, 0.08);
 }
 
 .table-row.inactive {
@@ -1085,7 +1181,7 @@ onMounted(loadTrucks)
 
 .truck-number {
   font-weight: 700;
-  color: #60a5fa;
+  color: #3b82f6;
   font-size: 0.8rem;
 }
 
@@ -1190,25 +1286,122 @@ onMounted(loadTrucks)
 /* Location cell */
 .location-cell {
   max-width: 200px;
+}
+
+.location-btn {
+  background: transparent;
+  border: none;
+  color: #3b82f6;
+  cursor: pointer;
+  font-size: 0.8rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  transition: all 0.2s;
+  text-align: left;
+  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.location-btn:hover {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+}
+
+/* Location Modal */
+.location-modal {
+  background: var(--bg-secondary);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 400px;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 24px 48px var(--shadow-lg);
+}
+
+.location-info {
+  padding: 1.5rem;
+}
+
+.address-display {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.25rem;
+  background: var(--bg-tertiary);
+  border-radius: 12px;
+  margin-bottom: 1rem;
+}
+
+.address-display > svg {
+  width: 28px;
+  height: 28px;
+  color: #3b82f6;
+  flex-shrink: 0;
+}
+
+.address-text {
+  flex: 1;
+}
+
+.address-main {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: block;
+}
+
+.address-main.empty {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.copy-location-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.copy-location-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.copy-location-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
+}
+
+.copy-location-btn.copied {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
 /* Inline Edit Fields */
 .inline-edit {
-  background: #1e293b;
-  border: 1px solid #475569;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
   padding: 0.4rem 0.5rem;
-  color: #e2e8f0;
+  color: var(--text-primary);
   width: 100%;
   font-size: 0.75rem;
   transition: all 0.2s;
 }
 
 .inline-edit:hover {
-  border-color: #64748b;
+  border-color: var(--border-hover);
 }
 
 .inline-edit:focus {
@@ -1218,7 +1411,7 @@ onMounted(loadTrucks)
 }
 
 .inline-edit::placeholder {
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 .inline-edit.narrow {
@@ -1311,39 +1504,39 @@ onMounted(loadTrucks)
   justify-content: space-between;
   align-items: flex-start;
   padding: 1.75rem;
-  border-bottom: 1px solid #475569;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .modal-header h3 {
   font-size: 1.375rem;
   font-weight: 700;
-  color: #f1f5f9;
+  color: var(--text-primary);
   margin-bottom: 0.375rem;
 }
 
 .modal-header p {
-  color: #94a3b8;
+  color: var(--text-secondary);
   font-size: 0.875rem;
 }
 
 .modal-close {
   width: 38px;
   height: 38px;
-  background: #1e293b;
-  border: 1px solid #475569;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: #94a3b8;
+  color: var(--text-secondary);
   transition: all 0.2s;
 }
 
 .modal-close:hover {
-  background: #475569;
-  border-color: #64748b;
-  color: #f1f5f9;
+  background: var(--bg-tertiary);
+  border-color: var(--border-hover);
+  color: var(--text-primary);
 }
 
 .modal-close svg {
@@ -1353,13 +1546,13 @@ onMounted(loadTrucks)
 
 /* Dispatcher Modal */
 .dispatcher-modal {
-  background: #334155;
+  background: var(--bg-secondary);
   border-radius: 16px;
   width: 100%;
   max-width: 360px;
   overflow: hidden;
-  border: 1px solid #475569;
-  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 24px 48px var(--shadow-lg);
 }
 
 .dispatcher-info {
@@ -1371,7 +1564,7 @@ onMounted(loadTrucks)
   align-items: flex-start;
   gap: 1rem;
   padding: 1rem;
-  background: #1e293b;
+  background: var(--bg-tertiary);
   border-radius: 12px;
   margin-bottom: 0.75rem;
 }
@@ -1398,7 +1591,7 @@ onMounted(loadTrucks)
 
 .contact-label {
   font-size: 0.75rem;
-  color: #64748b;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-weight: 600;
@@ -1406,7 +1599,7 @@ onMounted(loadTrucks)
 
 .contact-value {
   font-size: 0.95rem;
-  color: #f1f5f9;
+  color: var(--text-primary);
   word-break: break-all;
   text-decoration: none;
   transition: color 0.2s;
@@ -1417,7 +1610,7 @@ onMounted(loadTrucks)
 }
 
 .contact-value.empty {
-  color: #64748b;
+  color: var(--text-muted);
   font-style: italic;
 }
 
@@ -1491,13 +1684,13 @@ onMounted(loadTrucks)
 
 /* Rating Modal */
 .rating-modal {
-  background: #334155;
+  background: var(--bg-secondary);
   border-radius: 16px;
   width: 100%;
   max-width: 500px;
   overflow: hidden;
-  border: 1px solid #475569;
-  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 24px 48px var(--shadow-lg);
 }
 
 .rating-form {
@@ -1507,7 +1700,7 @@ onMounted(loadTrucks)
 }
 
 .rating-item {
-  background: #1e293b;
+  background: var(--bg-tertiary);
   border-radius: 12px;
   padding: 1rem;
   margin-bottom: 1rem;
@@ -1527,7 +1720,7 @@ onMounted(loadTrucks)
 .criteria-name {
   font-size: 0.95rem;
   font-weight: 600;
-  color: #f1f5f9;
+  color: var(--text-primary);
 }
 
 .criteria-score {
@@ -1546,9 +1739,9 @@ onMounted(loadTrucks)
   width: 32px;
   height: 32px;
   border-radius: 6px;
-  border: 1px solid #475569;
-  background: #334155;
-  color: #94a3b8;
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
   font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
@@ -1569,10 +1762,10 @@ onMounted(loadTrucks)
 .comment-input {
   width: 100%;
   padding: 0.625rem 0.75rem;
-  border: 1px solid #475569;
+  border: 1px solid var(--border-color);
   border-radius: 8px;
-  background: #334155;
-  color: #e2e8f0;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
   font-size: 0.85rem;
   transition: all 0.2s;
 }
@@ -1584,7 +1777,7 @@ onMounted(loadTrucks)
 }
 
 .comment-input::placeholder {
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 .rating-error {
@@ -1612,16 +1805,16 @@ onMounted(loadTrucks)
   justify-content: flex-end;
   gap: 0.75rem;
   padding: 1.25rem 1.5rem;
-  border-top: 1px solid #475569;
-  background: #1e293b;
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-tertiary);
 }
 
 .btn-cancel {
   padding: 0.625rem 1.25rem;
   background: transparent;
-  border: 1px solid #475569;
+  border: 1px solid var(--border-color);
   border-radius: 8px;
-  color: #94a3b8;
+  color: var(--text-secondary);
   font-weight: 600;
   font-size: 0.875rem;
   cursor: pointer;
@@ -1629,9 +1822,9 @@ onMounted(loadTrucks)
 }
 
 .btn-cancel:hover {
-  border-color: #64748b;
-  color: #f1f5f9;
-  background: #475569;
+  border-color: var(--border-hover);
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
 }
 
 .btn-submit {

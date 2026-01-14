@@ -2,15 +2,7 @@
   <div class="login-container">
     <div class="login-left">
       <div class="brand">
-        <div class="brand-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="1" y="3" width="15" height="13" rx="2"/>
-            <path d="M16 8h4l3 3v5h-7V8z"/>
-            <circle cx="5.5" cy="18.5" r="2.5"/>
-            <circle cx="18.5" cy="18.5" r="2.5"/>
-          </svg>
-        </div>
-        <span class="brand-text">ReadyTruck</span>
+        <img src="/img/image.png" alt="Taylor Transports LLC" class="brand-logo" />
       </div>
       <div class="hero-content">
         <h1>Fleet Management Made Simple</h1>
@@ -115,28 +107,13 @@ async function handleLogin() {
 .brand {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
   margin-bottom: 4rem;
 }
 
-.brand-icon {
-  width: 40px;
-  height: 40px;
-  background: rgba(255,255,255,0.15);
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.brand-icon svg {
-  width: 24px;
-  height: 24px;
-}
-
-.brand-text {
-  font-size: 1.5rem;
-  font-weight: 700;
+.brand-logo {
+  height: 80px;
+  width: auto;
+  filter: brightness(0) invert(1);
 }
 
 .hero-content {

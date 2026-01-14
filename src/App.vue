@@ -1,16 +1,8 @@
 <template>
-  <div class="app">
+  <div class="app" :class="{ dark: themeStore.isDark }">
     <nav v-if="authStore.isAuthenticated" class="navbar">
       <div class="nav-brand">
-        <div class="brand-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="1" y="3" width="15" height="13" rx="2"/>
-            <path d="M16 8h4l3 3v5h-7V8z"/>
-            <circle cx="5.5" cy="18.5" r="2.5"/>
-            <circle cx="18.5" cy="18.5" r="2.5"/>
-          </svg>
-        </div>
-        <span class="brand-text">ReadyTruck</span>
+        <img src="/img/image.png" alt="Taylor Transports LLC" class="brand-logo" />
       </div>
       <div class="nav-links">
         <!-- Admin sees all nav links -->
@@ -61,6 +53,17 @@
         </template>
       </div>
       <div class="nav-user">
+        <button @click="themeStore.toggleTheme" class="btn-theme" :title="themeStore.isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'">
+          <!-- Sun icon for dark mode (click to go light) -->
+          <svg v-if="themeStore.isDark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="5"/>
+            <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+          </svg>
+          <!-- Moon icon for light mode (click to go dark) -->
+          <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+          </svg>
+        </button>
         <div class="user-badge">
           <span class="user-avatar">{{ authStore.user?.username?.charAt(0).toUpperCase() }}</span>
           <div class="user-info">
@@ -83,9 +86,11 @@
 
 <script setup>
 import { useAuthStore } from './stores/auth'
+import { useThemeStore } from './stores/theme'
 import { useRouter } from 'vue-router'
 
 const authStore = useAuthStore()
+const themeStore = useThemeStore()
 const router = useRouter()
 
 function logout() {
@@ -99,19 +104,50 @@ function logout() {
   box-sizing: border-box;
 }
 
+/* Light theme (default) */
+:root {
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f1f5f9;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --text-muted: #94a3b8;
+  --border-color: #e2e8f0;
+  --border-hover: #cbd5e1;
+  --shadow: rgba(0, 0, 0, 0.08);
+  --shadow-lg: rgba(0, 0, 0, 0.1);
+}
+
+/* Dark theme */
+.dark {
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-tertiary: #334155;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --border-color: #334155;
+  --border-hover: #475569;
+  --shadow: rgba(0, 0, 0, 0.25);
+  --shadow-lg: rgba(0, 0, 0, 0.4);
+}
+
 body {
   margin: 0;
-  background: #1e293b;
+  background: var(--bg-primary);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .app {
   min-height: 100vh;
-  background: #1e293b;
+  background: var(--bg-primary);
+  transition: background 0.3s ease;
 }
 
 .navbar {
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-  color: white;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-color);
   padding: 0 1.5rem;
   display: flex;
   align-items: center;
@@ -119,36 +155,22 @@ body {
   position: sticky;
   top: 0;
   z-index: 100;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.25);
-  border-bottom: 1px solid rgba(255,255,255,0.05);
+  box-shadow: 0 2px 8px var(--shadow);
+  transition: all 0.3s ease;
 }
 
 .nav-brand {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
 }
 
-.brand-icon {
-  width: 36px;
-  height: 36px;
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.brand-logo {
+  height: 48px;
+  width: auto;
 }
 
-.brand-icon svg {
-  width: 22px;
-  height: 22px;
-  color: white;
-}
-
-.brand-text {
-  font-size: 1.25rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+.dark .brand-logo {
+  filter: brightness(0) invert(1);
 }
 
 .nav-links {
@@ -161,7 +183,7 @@ body {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: rgba(255,255,255,0.6);
+  color: var(--text-secondary);
   text-decoration: none;
   font-weight: 500;
   font-size: 0.9rem;
@@ -176,20 +198,45 @@ body {
 }
 
 .nav-link:hover {
-  color: white;
-  background: rgba(255,255,255,0.08);
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
 }
 
 .nav-link.router-link-active {
-  color: white;
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(37, 99, 235, 0.3));
+  color: #3b82f6;
+  background: rgba(59, 130, 246, 0.1);
 }
 
 .nav-user {
   margin-left: auto;
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem;
+}
+
+.btn-theme {
+  width: 40px;
+  height: 40px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-theme svg {
+  width: 20px;
+  height: 20px;
+}
+
+.btn-theme:hover {
+  border-color: #f59e0b;
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.1);
 }
 
 .user-badge {
@@ -208,6 +255,7 @@ body {
   justify-content: center;
   font-weight: 700;
   font-size: 0.9rem;
+  color: white;
 }
 
 .user-info {
@@ -218,21 +266,22 @@ body {
 .user-name {
   font-size: 0.9rem;
   font-weight: 600;
+  color: var(--text-primary);
 }
 
 .user-role {
   font-size: 0.75rem;
-  color: rgba(255,255,255,0.5);
+  color: var(--text-secondary);
   text-transform: capitalize;
 }
 
 .btn-logout {
   width: 40px;
   height: 40px;
-  background: rgba(255,255,255,0.08);
-  border: none;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
   border-radius: 10px;
-  color: rgba(255,255,255,0.6);
+  color: var(--text-secondary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -246,8 +295,9 @@ body {
 }
 
 .btn-logout:hover {
-  background: rgba(239, 68, 68, 0.2);
-  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.15);
+  border-color: #ef4444;
+  color: #ef4444;
 }
 
 .main-content {
