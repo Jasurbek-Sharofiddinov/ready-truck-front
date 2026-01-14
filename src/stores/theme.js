@@ -16,8 +16,10 @@ export const useThemeStore = defineStore('theme', () => {
     localStorage.setItem('theme', newVal ? 'dark' : 'light')
     if (newVal) {
       document.documentElement.classList.add('dark')
+      document.body.classList.add('dark')
     } else {
       document.documentElement.classList.remove('dark')
+      document.body.classList.remove('dark')
     }
   }, { immediate: true })
 

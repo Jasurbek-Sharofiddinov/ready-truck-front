@@ -717,7 +717,7 @@ onMounted(loadTrucks)
 
 .trucks-page {
   background: var(--bg-primary);
-  min-height: calc(100vh - 64px);
+  min-height: calc(100vh - 72px);
   padding: 2rem;
   color: var(--text-primary);
   transition: all 0.3s ease;

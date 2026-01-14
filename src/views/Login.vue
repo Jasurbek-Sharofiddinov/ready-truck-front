@@ -8,15 +8,6 @@
         <h1>Fleet Management Made Simple</h1>
         <p>Track your trucks, manage performance, and grow your business with our comprehensive logistics platform.</p>
       </div>
-      <div class="hero-graphic">
-        <svg viewBox="0 0 200 80" fill="none">
-          <rect x="10" y="20" width="80" height="45" rx="4" stroke="currentColor" stroke-width="2"/>
-          <path d="M90 30h35l20 15v20H90V30z" stroke="currentColor" stroke-width="2"/>
-          <circle cx="30" cy="68" r="10" stroke="currentColor" stroke-width="2"/>
-          <circle cx="120" cy="68" r="10" stroke="currentColor" stroke-width="2"/>
-          <path d="M0 68h200" stroke="currentColor" stroke-width="1" stroke-dasharray="6 6" opacity="0.4"/>
-        </svg>
-      </div>
     </div>
 
     <div class="login-right">
@@ -111,7 +102,7 @@ async function handleLogin() {
 }
 
 .brand-logo {
-  height: 80px;
+  height: 120px;
   width: auto;
   filter: brightness(0) invert(1);
 }
@@ -135,16 +126,6 @@ async function handleLogin() {
   color: rgba(255,255,255,0.7);
   font-size: 1.1rem;
   line-height: 1.6;
-}
-
-.hero-graphic {
-  margin-top: auto;
-  opacity: 0.2;
-}
-
-.hero-graphic svg {
-  width: 100%;
-  max-width: 300px;
 }
 
 .login-right {

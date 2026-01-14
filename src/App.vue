@@ -134,8 +134,13 @@ function logout() {
 
 body {
   margin: 0;
-  background: var(--bg-primary);
+  background: #f8fafc;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.dark body,
+body.dark {
+  background: #0f172a;
 }
 
 .app {
@@ -151,7 +156,7 @@ body {
   padding: 0 1.5rem;
   display: flex;
   align-items: center;
-  height: 64px;
+  height: 72px;
   position: sticky;
   top: 0;
   z-index: 100;
@@ -165,7 +170,7 @@ body {
 }
 
 .brand-logo {
-  height: 48px;
+  height: 56px;
   width: auto;
 }
 

@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir \"C:\\\\alif\\\\ready-truck-front\\\\public\\\\img\")"
+    ]
+  }
+}
