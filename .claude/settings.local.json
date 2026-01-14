@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(dir \"C:\\\\alif\\\\ready-truck-front\\\\public\\\\img\")"
+      "Bash(dir \"C:\\\\alif\\\\ready-truck-front\\\\public\\\\img\")",
+      "Bash(dir \"C:\\\\alif\\\\ready-truck-front\\\\img\")",
+      "Bash(npm install:*)",
+      "Bash(npm run dev:*)",
+      "Bash(timeout:*)"
     ]
   }
 }

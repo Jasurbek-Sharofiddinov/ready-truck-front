@@ -1,12 +1,12 @@
 <template>
   <div class="login-container">
     <div class="login-left">
-      <div class="brand">
-        <img src="/img/image.png" alt="Taylor Transports LLC" class="brand-logo" />
-      </div>
-      <div class="hero-content">
-        <h1>Fleet Management Made Simple</h1>
-        <p>Track your trucks, manage performance, and grow your business with our comprehensive logistics platform.</p>
+      <TruckScene />
+      <div class="left-overlay">
+        <div class="hero-content">
+          <h1>Fleet Management Made Simple</h1>
+          <p>Track your trucks, manage performance, and grow your business with our comprehensive logistics platform.</p>
+        </div>
       </div>
     </div>
 
@@ -56,6 +56,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+import TruckScene from '../components/TruckScene.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -88,23 +89,22 @@ async function handleLogin() {
 
 .login-left {
   flex: 1;
-  background: linear-gradient(135deg, #0f172a 0%, #1e40af 100%);
-  padding: 3rem;
-  display: flex;
-  flex-direction: column;
+  position: relative;
+  overflow: hidden;
   color: white;
 }
 
-.brand {
+.left-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  padding: 3rem;
   display: flex;
-  align-items: center;
-  margin-bottom: 4rem;
-}
-
-.brand-logo {
-  height: 120px;
-  width: auto;
-  filter: brightness(0) invert(1);
+  flex-direction: column;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.7) 0%, rgba(30, 64, 175, 0.5) 100%);
 }
 
 .hero-content {
