@@ -46,7 +46,6 @@
           </button>
         </form>
 
-        <p class="hint">Demo credentials: admin / admin123</p>
       </div>
     </div>
   </div>
@@ -243,13 +242,6 @@ async function handleLogin() {
 
 @keyframes spin {
   to { transform: rotate(360deg); }
-}
-
-.hint {
-  margin-top: 2rem;
-  text-align: center;
-  color: #94a3b8;
-  font-size: 0.85rem;
 }
 
 @media (max-width: 900px) {
