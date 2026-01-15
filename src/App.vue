@@ -64,13 +64,13 @@
             <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
           </svg>
         </button>
-        <div class="user-badge">
+        <router-link to="/profile" class="user-badge" title="Edit Profile">
           <span class="user-avatar">{{ authStore.user?.username?.charAt(0).toUpperCase() }}</span>
           <div class="user-info">
             <span class="user-name">{{ authStore.user?.username }}</span>
             <span class="user-role">{{ authStore.user?.role }}</span>
           </div>
-        </div>
+        </router-link>
         <button @click="logout" class="btn-logout" title="Sign Out">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>
@@ -248,6 +248,15 @@ body.dark {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  text-decoration: none;
+  padding: 0.5rem 0.75rem;
+  border-radius: 10px;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.user-badge:hover {
+  background: var(--bg-tertiary);
 }
 
 .user-avatar {

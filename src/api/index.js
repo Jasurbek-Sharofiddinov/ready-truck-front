@@ -33,6 +33,7 @@ export default {
   // Auth
   login: (username, password) => api.post('/auth/login', { username, password }),
   getMe: () => api.get('/auth/me'),
+  updateProfile: (data) => api.put('/auth/me', data),
 
   // Users
   getUsers: () => api.get('/users'),
