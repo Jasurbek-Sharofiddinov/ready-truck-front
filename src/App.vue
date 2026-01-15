@@ -2,7 +2,7 @@
   <div class="app" :class="{ dark: themeStore.isDark }">
     <nav v-if="authStore.isAuthenticated" class="navbar">
       <div class="nav-brand">
-        <img src="/img/image.png" alt="Taylor Transports LLC" class="brand-logo" />
+        <span class="brand-name">Taylor Transports LLC</span>
       </div>
       <div class="nav-links">
         <!-- Admin sees all nav links -->
@@ -169,13 +169,10 @@ body.dark {
   align-items: center;
 }
 
-.brand-logo {
-  height: 56px;
-  width: auto;
-}
-
-.dark .brand-logo {
-  filter: brightness(0) invert(1);
+.brand-name {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
 }
 
 .nav-links {

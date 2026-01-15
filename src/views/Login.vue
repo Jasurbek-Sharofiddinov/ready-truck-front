@@ -4,8 +4,8 @@
       <TruckScene />
       <div class="left-overlay">
         <div class="hero-content">
-          <h1>Fleet Management Made Simple</h1>
-          <p>Track your trucks, manage performance, and grow your business with our comprehensive logistics platform.</p>
+          <h1>Taylor Transports LLC</h1>
+          <p>Track our company trucks, contact dispatchers, and manage fleet operations all in one place.</p>
         </div>
       </div>
     </div>
